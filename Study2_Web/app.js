@@ -831,7 +831,8 @@ class ThoughtBubble {
 // Belief scale (as rating_scale in the Study 1 PsychoPy version)
 async function ratingScale(left, right, header, buttonText,
                            {first = null, binary = false, question = null, say = null,
-                            thought = null, check = null, follow = false} = {}) {
+                            thought = null, check = null, follow = false,
+                            thoughtStrength = 1} = {}) {
   clear();
   helpIcon();
   const taskW = Math.min(1100 * PX, 0.92 * 2 * HALF_W);
@@ -926,7 +927,7 @@ async function ratingScale(left, right, header, buttonText,
     middleMark.style.display = placed && pos === 0 ? '' : 'none';
     if (firstLabel) firstLabel.style.display = nTouches === 0 ? '' : 'none';
     if (bubble && follow) bubble.follow(pos, placed);
-    else if (bubble) bubble.show(thought);
+    else if (bubble) bubble.show(thought, thoughtStrength);
     setEnabled(done, placed);
     skip.style.display = check && attempts >= CFG.PRACTICE_SKIP_AFTER ? '' : 'none';
   };
@@ -983,21 +984,28 @@ async function ratingScale(left, right, header, buttonText,
   return result;
 }
 
-// Practice with the scale (first round only): the demonstration ("Let me
-// show you!"), then really more left, really more right and don't know, one
-// screen each; the answers go to S.practice.
+// Practice with the scale (first round only), as in Study 1: the
+// demonstration ("Let me show you!"), then really / kind of (small, faint
+// animal in the bubble) for each side and don't know, one screen each; the
+// answers go to S.practice. Items: [EXP key, data column, thought, thought
+// strength, check].
 function practiceSteps(S, left, right, names) {
-  const items = [['train_left', 'practice_really_left', left, p => p <= -CFG.REALLY],
-                 ['train_right', 'practice_really_right', right, p => p >= CFG.REALLY],
-                 ['train_middle', 'practice_dont_know', 'dont_know',
-                  p => Math.abs(p) <= CFG.PRACTICE_MIDDLE]];
+  const kind = CFG.PRACTICE_KIND_OF_STRENGTH, mid = CFG.PRACTICE_MIDDLE;
+  const items = [['train_left', 'practice_really_left', left, 1, p => p <= -CFG.REALLY],
+                 ['train_left_kind', 'practice_kind_of_left', left, kind,
+                  p => p > -CFG.REALLY && p < -mid],
+                 ['train_right', 'practice_really_right', right, 1, p => p >= CFG.REALLY],
+                 ['train_right_kind', 'practice_kind_of_right', right, kind,
+                  p => p > mid && p < CFG.REALLY],
+                 ['train_middle', 'practice_dont_know', 'dont_know', 1, p => Math.abs(p) <= mid]];
   const steps = [() => ratingScale(left(), right(), EXP.train_demo, TXT.continue,
                                    {question: TXT.practice_show, say: fmt(EXP.train_demo_say, names()),
                                     follow: true})];
-  items.forEach(([key, column, thought, check]) => steps.push(async () => {
+  items.forEach(([key, column, thought, thoughtStrength, check]) => steps.push(async () => {
     const answer = await ratingScale(left(), right(), fmt(EXP[key], names()), TXT.continue,
                                      {question: '', say: fmt(EXP[`${key}_say`], names()),
-                                      thought: typeof thought === 'function' ? thought() : thought, check});
+                                      thought: typeof thought === 'function' ? thought() : thought,
+                                      thoughtStrength, check});
     Object.assign(S.practice, {[column]: round(answer.pos * 100, 1),
                                [`${column}_first`]: round(answer.first_pos * 100, 1),
                                [`${column}_attempts`]: answer.attempts,
@@ -1005,7 +1013,8 @@ function practiceSteps(S, left, right, names) {
   }));
   return steps;
 }
-const PRACTICE_COLUMNS = ['practice_really_left', 'practice_really_right', 'practice_dont_know'];
+const PRACTICE_COLUMNS = ['practice_really_left', 'practice_kind_of_left', 'practice_really_right',
+                          'practice_kind_of_right', 'practice_dont_know'];
 // Video screen: tap the video to start it; afterwards Replay or Continue.
 // Returns {plays, missing}.
 async function playVideo(name) {
