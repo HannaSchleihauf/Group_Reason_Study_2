@@ -15,7 +15,7 @@
 // and editors can write and read. Viewers who cannot write there keep their
 // data on their device and save them with the download button.
 
-const SHEETS_URL = '';  // web app URL of google_sheets/Code.gs ('' = device only)
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxFkqzxxhVnMuu3ObYknfCjlbAGoC3H78XpW3eqa8CT7-IIfRiHt_XzVSx2mBZ7gapH/exec';  // web app URL of google_sheets/Code.gs ('' = device only)
 const SHEETS_TOKEN = 'gr2-BImj5DUkskh34JdP'; // must be the same as TOKEN in Code.gs
 const RETRY_SECONDS = 30;
 

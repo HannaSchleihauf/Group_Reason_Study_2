@@ -105,10 +105,10 @@ The script makes only what is missing or out of date. It finds each source
 file by its number (`38.2-…`), so typos in the rest of a file name do not
 matter.
 
-**Google Sheet.** Make a new sheet for Study 2 (not the Study 1 sheet).
-Follow the steps at the top of `google_sheets/Code.gs`, then put the web app
-URL in `SHEETS_URL` in `data.js`. Until then, data stay on the device:
-download the CSV at the end of each session.
+**Google Sheet.** Connected (`SHEETS_URL` in `data.js`; its own sheet, not
+the Study 1 sheet). After changing `google_sheets/Code.gs`, paste it into the
+sheet's Apps Script and use Deploy > Manage deployments > edit > Version: New
+version, so that the URL stays the same.
 
 **Testing on this computer.** Run `sh tools/run_local.sh`.
 It opens the task in the browser and prints an address that an iPad on the
