@@ -465,7 +465,7 @@ function startForm() {
       <label>participant <input id="f-participant" readonly value="..."></label>
       <div class="note" id="f-source"></div>
       <label class="check"><input type="checkbox" id="f-test">
-        test run (participant "test", not counted)</label>
+        test run (saved as participant "test"; not counted for numbers and counterbalancing)</label>
       <label>age <select id="f-age"><option value="" selected disabled>choose</option>
         ${CFG.AGES.map(a => `<option>${a}</option>`).join('')}</select></label>
       <label>gender <select id="f-gender"><option value=""></option><option>female</option>
