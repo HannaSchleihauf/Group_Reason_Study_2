@@ -29,8 +29,9 @@ All commands below are run from the `Study2_Web` folder.
 2. **Introduction**: in the *group* condition the child picks a team and taps
    their team. In the *no-group* condition the child is the zoo helper and is
    shown both teams.
-3. **Liking check**: one gender-matched member of each team (really like … really
-   not like), then the **sticker task** (5 stickers).
+3. **Sticker task** (5 stickers) with one gender-matched member of each team,
+   then the **liking check** (really like … really not like) with the same two
+   members.
 4. **4 trials**, one animal pair each:
    - setup (in the first trial, the game introduction and scale practice);
    - **step 2**: belief video of each team (no reason), each followed by "what

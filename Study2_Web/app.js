@@ -1195,9 +1195,9 @@ async function likingScreen(memberGender, sides, header, say) {
                                     {color: CFG.EXP_BUTTON_COLOR, width: 0.36});
     });
   });
-  const done = button(TXT.continue, 0, -0.3);
+  const done = button(TXT.continue, 0, -0.265);
   const skip = button(EXP.skip, HALF_W - 0.12, -0.45, {color: CFG.EXP_BUTTON_COLOR});
-  sayText(say, 0, -0.35, {size: 0.021});
+  sayText(say, 0, -0.325, {size: 0.019});
   const draw = () => {
     CFG.TEAMS.forEach(team => Object.entries(buttons[team]).forEach(([value, b]) =>
       setColor(b, answer[team] === value ? CFG.SELECTED_COLOR : CFG.EXP_BUTTON_COLOR)));
@@ -1345,17 +1345,17 @@ async function main() {
   design.team_b = otherTeam(design.team_a);
   const [teamA, teamB] = [design.team_a, design.team_b];
 
-  // Liking check and sticker task with one gender-matched member per team
+  // Sticker task, then liking check, with one gender-matched member per team
   const memberGender = ['female', 'male'].includes(info.gender) ? info.gender : pick(['female', 'male']);
   const [thisSg, pl, him] = CFG.MEMBER_WORDS[lang][memberGender];
   const [asked1, asked2] = namedOrder();
   const askWords = {this_sg: thisSg, pl, him, whose1: whose(asked1), whose2: whose(asked2)};
   const sides = Math.random() < 0.5 ? [...CFG.TEAMS] : [...CFG.TEAMS].reverse();
-  const liking = await likingScreen(memberGender, sides, fmt(EXP.liking, {pl}),
-                                    fmt(EXP.liking_say, askWords));
-  await experimenterScreen(fmt(EXP.sticker_intro, {n: CFG.N_STICKERS}), null,
+  await experimenterScreen(fmt(EXP.sticker_intro, {n: CFG.N_STICKERS, pl}), null,
                            fmt(EXP.sticker_intro_say, askWords));
   const stickers = await stickerTask(memberGender, sides);
+  const liking = await likingScreen(memberGender, sides, EXP.liking,
+                                    fmt(EXP.liking_say, askWords));
   const score = v => (v ? CFG.LIKING_SCORE[v] : '');
   Object.assign(session, {
     sticker_member_gender: memberGender, sticker_pic_left: sides[0],
