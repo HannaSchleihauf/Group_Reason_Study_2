@@ -73,7 +73,8 @@ const Data = {
   },
 
   saveRow(row) {
-    const rows = this.allRows();
+    // a trial done again (after going back) replaces its earlier row
+    const rows = this.allRows().filter(r => this.rowId(r) !== this.rowId(row));
     rows.push(row);
     this.store(STORE_ROWS, rows);
     this.queue([row]);

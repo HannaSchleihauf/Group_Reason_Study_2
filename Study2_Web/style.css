@@ -82,6 +82,24 @@ html, body {
 .help-on #help { background: #a3a3a3; color: #ffffff; }
 #help::after { content: ''; position: absolute; top: -14px; right: -14px; bottom: -14px; left: -14px; } /* bigger tap area */
 
+#back {  /* go back one screen (experimenter) */
+  position: absolute;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 2px solid #a3a3a3;
+  color: #a3a3a3;
+  background: #ffffff;
+  font: bold 28px Arial, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 50;
+}
+#back::after { content: ''; position: absolute; top: -10px; right: -14px; bottom: -10px; left: -14px; }
+
 svg.layer { position: absolute; left: 0; top: 0; width: 1366px; height: 1024px; pointer-events: none; overflow: visible; }
 
 .hit { position: absolute; transform: translate(-50%, -50%); cursor: pointer; }

@@ -46,8 +46,10 @@ All commands below are run from the `Study2_Web` folder.
    child's final animal is always in most of them.
 6. **End screen**: the child picks a sticker; the data can be downloaded as CSV.
 
-The **(i)** button (top left) shows what to say on each screen. On a video
-screen, the **s** key skips to the end of the video (for testing).
+The **(i)** button (top left) shows what to say on each screen. The **←**
+button under it goes back one screen (web version): the answers given on the
+screens since then are undone, and a trial done again replaces its data row.
+On a video screen, the **s** key skips to the end of the video (for testing).
 
 ## Design and counterbalancing
 
