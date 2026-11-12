@@ -1,0 +1,6 @@
+# Original recordings (2 GB); the web copies are in Study2_Web/media/videos
+# (made by Study2_Web/tools/prepare_videos.swift)
+video_stimuli/
+# Local files
+.DS_Store
+*_hostinger.zip
