@@ -371,8 +371,8 @@ const N_TRIALS = Object.values(CFG.TRIAL_ORDERS)[0].length;
 const otherTeam = team => CFG.TEAMS.find(t => t !== team);
 
 // Counterbalancing list (1-64) -> design of the session: membership (group /
-// no-group), trial order (A-first / B-first), order of the animal pairs (row
-// of LATIN), Team A in the no-group condition (Moon / Sun; in the group
+// no-group), trial order (A-first / B-first), the two animal pairs and their
+// order (row of PAIR_ORDERS: one colour set), Team A in the no-group condition (Moon / Sun; in the group
 // condition Team A is the team the child chose) and the sides of the scale.
 function makeDesign(cbList) {
   const idx = cbList - 1;
@@ -380,6 +380,7 @@ function makeDesign(cbList) {
     membership: CFG.MEMBERSHIPS[idx % 2],
     trial_order: Object.keys(CFG.TRIAL_ORDERS)[Math.floor(idx / 2) % 2],
     pair_order: Math.floor(idx / 4) % 4 + 1,
+    colour_set: CFG.COLOUR_SETS[CFG.PAIR_ORDERS[Math.floor(idx / 4) % 4][0]],
     list_team_a: CFG.TEAMS[Math.floor(idx / 16) % 2],
     swap_sides: Math.floor(idx / 32) % 2 === 1,
   };
@@ -387,8 +388,8 @@ function makeDesign(cbList) {
 
 async function assignList(age, membership = null) {
   // Least used membership at this age (unless it was set on the start form),
-  // within it the least used trial order (rotation, as in the procedure), and
-  // then the least used list; ties at random. Completed sessions: all trials,
+  // within it the least used trial order (rotation, as in the procedure), then
+  // the least used colour set, and then the least used list; ties at random. Completed sessions: all trials,
   // IDs not starting with "test".
   const {sessions} = await withTimeout(Data.completedSessions(), 5000,
                                        {source: 'none', sessions: []});
@@ -400,7 +401,9 @@ async function assignList(age, membership = null) {
   const usage = cb => {
     const d = makeDesign(cb);
     const same = done.filter(x => x.membership === d.membership);
-    return [same.length, same.filter(x => x.trial_order === d.trial_order).length,
+    const sameOrder = same.filter(x => x.trial_order === d.trial_order);
+    return [same.length, sameOrder.length,
+            sameOrder.filter(x => x.colour_set === d.colour_set).length,
             done.filter(x => x.cb === cb).length, Math.random()];
   };
   const lessThan = (a, b) => {  // compare usage tuples, first entry first
@@ -419,16 +422,16 @@ async function assignList(age, membership = null) {
   return best;
 }
 
-// The four trials. teamA: the child's team (group) or Team A (no-group).
+// The two trials. teamA: the child's team (group) or Team A (no-group).
 // Condition letter A: Team A gives the good reason (IG / T1); B: Team B
-// (OG / T2). Within each condition the good-reason team is shown first in one
-// of its two trials (so in half of all trials); Team A claims the first
-// animal of the pair in two trials and the second in the other two.
+// (OG / T2). The good-reason team is shown first in one of the two trials;
+// Team A claims the first animal of the pair in one trial and the second in
+// the other.
 function makeTrials(d, teamA) {
   const teamB = otherTeam(teamA);
-  const boxes = CFG.LATIN[d.pair_order - 1].map(i => CFG.BOX_ORDER[i]);
-  const goodFirst = {A: shuffle([true, false]), B: shuffle([true, false])};
-  const claimsFirst = shuffle([true, true, false, false]);
+  const boxes = CFG.PAIR_ORDERS[d.pair_order - 1];
+  const goodFirst = shuffle([true, false]);
+  const claimsFirst = shuffle([true, false]);
   return CFG.TRIAL_ORDERS[d.trial_order].map((letter, i) => {
     const box = boxes[i];
     const pair = CFG.BOXES[box];
@@ -437,7 +440,7 @@ function makeTrials(d, teamA) {
     const weakTeam = otherTeam(goodTeam);
     const animalA = claimsFirst[i] ? pair[0] : pair[1];
     const claims = {[teamA]: animalA, [teamB]: pair.find(a => a !== animalA)};
-    const good = goodFirst[letter].pop();
+    const good = goodFirst[i];
     const first = good ? goodTeam : weakTeam;
     return {trial: i + 1, condition: CFG.CONDITIONS[d.membership][letter],
             good_team: goodTeam, weak_team: weakTeam, box_color: box,
@@ -750,7 +753,7 @@ async function showTeams(own) {
 }
 
 // Sticker task; `sides`: the team members from left to right (as on the
-// liking screen)
+// play screen)
 async function stickerTask(memberGender, sides) {
   clear();
   const photo = Math.min(0.42, HALF_W * 0.62);
@@ -1259,44 +1262,47 @@ function pairSteps(v1, v2, between) {
   return [...v1.watch, between, ...v2.watch, ...v1.checks, ...v2.checks];
 }
 
-// Liking check: the experimenter records how much the child likes the team
-// member of each team (really like ... really not like).
-async function likingScreen(memberGender, sides, header, say) {
+// Play question: who would the child rather play with? One member of each
+// team (same gender as the child; `sides` = teams from left to right, as on
+// the sticker screen). The experimenter taps the picture of the person the
+// child chooses (a frame marks it; tapping the other picture changes the
+// choice); Continue once a person is chosen, or Skip, which leaves it empty.
+async function playScreen(memberGender, sides, header, say) {
   clear();
   helpIcon();
   expText(header, 0, 0.455, {size: 0.024, width: 2 * HALF_W * 0.85});
-  const x = Math.min(0.32, HALF_W * 0.48), photo = 0.27, yPhoto = 0.24;
-  const answer = {moon: '', sun: ''};
-  const buttons = {moon: {}, sun: {}};
+  const x = Math.min(0.3, HALF_W * 0.45), photo = Math.min(0.36, HALF_W * 0.56), yPhoto = 0.11;
+  let choice = '';
+  const frames = {}, hits = {};
   sides.forEach((team, i) => {
     const xpos = [-x, x][i];
+    frames[team] = add('div');  // first, so that the team logo is drawn over it
+    Object.assign(frames[team].style, {width: `${U(photo + 0.03)}px`, height: `${U(photo + 0.03)}px`,
+                                       border: `12px solid ${CFG.SELECTED_COLOR}`,
+                                       borderRadius: '12px', pointerEvents: 'none'});
+    place(frames[team], xpos, yPhoto);
     image(media.member(team, memberGender), xpos, yPhoto, photo, 'rounded');
-    image(media.group(team), xpos - photo / 2 - 0.02, yPhoto + photo / 2 - 0.03, 0.07);
-    CFG.LIKING.forEach((value, k) => {
-      buttons[team][value] = button(EXP.liking_options[value], xpos, 0.045 - k * 0.068,
-                                    {color: CFG.EXP_BUTTON_COLOR, width: 0.36});
-    });
+    image(media.group(team), xpos - photo / 2 - 0.02, yPhoto + photo / 2 - 0.03, 0.08);
+    hits[team] = add('div', 'hit');
+    Object.assign(hits[team].style, {width: `${U(photo + 0.03)}px`, height: `${U(photo + 0.03)}px`});
+    place(hits[team], xpos, yPhoto);
   });
   const done = button(TXT.continue, 0, -0.265);
   const skip = button(EXP.skip, HALF_W - 0.12, -0.45, {color: CFG.EXP_BUTTON_COLOR});
   sayText(say, 0, -0.325, {size: 0.019});
   const draw = () => {
-    CFG.TEAMS.forEach(team => Object.entries(buttons[team]).forEach(([value, b]) =>
-      setColor(b, answer[team] === value ? CFG.SELECTED_COLOR : CFG.EXP_BUTTON_COLOR)));
-    setEnabled(done, answer.moon !== '' && answer.sun !== '');
+    CFG.TEAMS.forEach(team => { frames[team].style.display = choice === team ? '' : 'none'; });
+    setEnabled(done, choice !== '');
   };
   draw();
   await released();
   const t0 = performance.now();
-  CFG.TEAMS.forEach(team => Object.entries(buttons[team]).forEach(([value, b]) => onTap(b, () => {
-    answer[team] = answer[team] === value ? '' : value;
-    draw();
-  })));
+  CFG.TEAMS.forEach(team => onTap(hits[team], () => { choice = team; draw(); }));
   await new Promise(resolve => {
     onTap(done, resolve);
     onTap(skip, resolve);
   });
-  return {answer, rt: (performance.now() - t0) / 1000};
+  return {choice, rt: (performance.now() - t0) / 1000};
 }
 
 function tickMark(layer, x, y, r = 0.028) {
@@ -1394,7 +1400,7 @@ async function main() {
           date: dateStr(), app: 'web', membership: design.membership,
           membership_assigned: setByHand ? 'by hand' : 'balanced',
           trial_order: design.trial_order, cb_list: cbList, pair_order: design.pair_order,
-          swap_sides: design.swap_sides};
+          colour_set: design.colour_set, swap_sides: design.swap_sides};
   const group = design.membership === 'group';
   const filename = `${info.participant}_${info.date}.csv`;
 
@@ -1403,7 +1409,6 @@ async function main() {
   const memberGender = ['female', 'male'].includes(info.gender) ? info.gender : pick(['female', 'male']);
   const [thisSg, pl, him] = CFG.MEMBER_WORDS[lang][memberGender];
   const sides = Math.random() < 0.5 ? [...CFG.TEAMS] : [...CFG.TEAMS].reverse();
-  const score = v => (v ? CFG.LIKING_SCORE[v] : '');
   const askWords = () => {
     const [asked1, asked2] = namedOrder();
     return {this_sg: thisSg, pl, him, whose1: whose(asked1), whose2: whose(asked2)};
@@ -1437,7 +1442,7 @@ async function main() {
     design.team_b = otherTeam(S.team_a);
     S.teams = await showTeams(group ? S.team_a : null);
   });
-  // the four trials (made again if the team was chosen again)
+  // the two trials (made again if the team was chosen again)
   steps.push(() => {
     if (!S.trials || S.trials_team_a !== S.team_a) {
       S.trials = makeTrials(design, S.team_a);
@@ -1446,12 +1451,14 @@ async function main() {
     return NO_SCREEN;
   });
 
-  // Sticker task, then liking check, with one gender-matched member per team
+  // Sticker task, then play question, with one gender-matched member per team
   steps.push(() => experimenterScreen(fmt(EXP.sticker_intro, {n: CFG.N_STICKERS, pl}), null,
                                       fmt(EXP.sticker_intro_say, askWords())));
   steps.push(async () => { S.stickers = await stickerTask(memberGender, sides); });
   steps.push(async () => {
-    S.liking = await likingScreen(memberGender, sides, EXP.liking, fmt(EXP.liking_say, askWords()));
+    // the two members are named in the order of the pictures (left to right)
+    S.play = await playScreen(memberGender, sides, EXP.play,
+                              fmt(EXP.play_say, {...askWords(), whose1: whose(sides[0]), whose2: whose(sides[1])}));
   });
   const sessionCols = () => {
     const teamA = S.team_a, teamB = otherTeam(teamA);
@@ -1464,9 +1471,12 @@ async function main() {
          team_tap_first: '', team_tap_n_wrong: '', team_tap_rt: ''};
     Object.assign(cols, {
       sticker_member_gender: memberGender, sticker_pic_left: sides[0],
-      liking_moon_member: S.liking.answer.moon, liking_sun_member: S.liking.answer.sun,
-      liking_team_a: score(S.liking.answer[teamA]), liking_team_b: score(S.liking.answer[teamB]),
-      liking_rt: round(S.liking.rt, 3),
+      play_choice: S.play.choice,
+      // group: own_team / other_team; no-group: team_a / team_b
+      play_team: !S.play.choice ? '' : group
+        ? (S.play.choice === teamA ? 'own_team' : 'other_team')
+        : (S.play.choice === teamA ? 'team_a' : 'team_b'),
+      play_rt: round(S.play.rt, 3),
       stickers_to_moon_member: S.stickers.count.moon, stickers_to_sun_member: S.stickers.count.sun,
       stickers_team_a: S.stickers.count[teamA], stickers_team_b: S.stickers.count[teamB],
       sticker_rt: round(S.stickers.rt, 3)});

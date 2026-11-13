@@ -30,9 +30,10 @@ All commands below are run from the `Study2_Web` folder.
    their team. In the *no-group* condition the child is the zoo helper and is
    shown both teams.
 3. **Sticker task** (5 stickers) with one gender-matched member of each team,
-   then the **liking check** (really like … really not like) with the same two
-   members.
-4. **4 trials**, one animal pair each:
+   then the **play question** with the same two members: who would the child
+   rather play with? The experimenter names them in the order of the pictures
+   (left to right, random) and taps the picture the child chooses.
+4. **2 trials** (one per condition), one animal pair each:
    - setup (in the first trial, the game introduction and scale practice);
    - **step 2**: belief video of each team (no reason), both videos first, then
      the check "what does the team think?" for the first team and then for the
@@ -57,37 +58,40 @@ On a video screen, the **s** key skips to the end of the video (for testing).
 ## Design and counterbalancing
 
 Conditions: group = IG (the child's team gives the good reason) / OG; no-group =
-T1 (Team A gives the good reason) / T2. Trial order A-first = IG IG OG OG (T1 T1 T2 T2),
-B-first = the reverse.
+T1 (Team A gives the good reason) / T2. Each child has 2 trials, one per
+condition: trial order A-first = IG then OG (T1 then T2), B-first = the reverse.
 
 Each session gets a counterbalancing list (`cb_list`, 1–64) that sets the
-membership, the trial order, the order of the animal pairs (Latin square,
-`pair_order`), Team A in the no-group condition, and the sides of the scale
-(`swap_sides`). The app chooses the least used membership for this age, then
-the least used trial order within it, then the least used list. Sessions
+membership, the trial order, the two animal pairs and their order
+(`pair_order` 1–4: blue–red, red–blue, green–yellow, yellow–green), Team A in the no-group condition, and the sides of the scale
+(`swap_sides`). The two pairs always come from one colour set (`colour_set`:
+blue_red or green_yellow), because the Moon boy differs between the sets
+(dark-haired in blue and red, fair-haired in green and yellow): each child sees
+only one Moon boy. The app chooses the least used membership for this age, then
+the least used trial order within it, then the least used colour set, then the
+least used list. Sessions
 are counted from the Google Sheet when it can be reached (all devices),
 otherwise from this device. Test runs and incomplete sessions are not counted.
 
 Randomised within each session (and recorded per trial):
 
-- whether the good-reason team is shown first: once in each condition's two
-  trials, so in 2 of 4 trials;
+- whether the good-reason team is shown first: in one of the 2 trials;
 - which animal each team claims: Team A claims the first animal of the pair in
-  2 trials and the second in the other 2.
+  one trial and the second in the other.
 
 ## Data (one row per trial)
 
 | Column(s) | Meaning |
 |---|---|
 | `membership`, `membership_assigned` | group / no_group; balanced or by hand |
-| `trial_order`, `cb_list`, `pair_order`, `swap_sides` | counterbalancing |
+| `trial_order`, `cb_list`, `pair_order`, `colour_set`, `swap_sides` | counterbalancing |
 | `team_a`, `team_b`, `child_team` | group: Team A = the child's team; no-group: Team A from the list |
-| `sticker_member_gender`, `sticker_pic_left` | gender of the two members; the team shown left (liking and sticker screens) |
-| `liking_moon_member`, `liking_sun_member` | really_like … really_not_like |
-| `liking_team_a`, `liking_team_b` | the same as scores (4 = really like … 1 = really not like) |
+| `sticker_member_gender`, `sticker_pic_left` | gender of the two members; the team shown left (sticker and play screens) |
+| `play_choice` | the team member the child would rather play with: moon / sun (empty if skipped) |
+| `play_team`, `play_rt` | group: own_team / other_team; no-group: team_a / team_b (empty if skipped); time to answer (s) |
 | `stickers_to_moon_member`, `stickers_to_sun_member`, `stickers_team_a`, `stickers_team_b` | sticker allocation |
 | `practice_*` | scale practice (from trial 1 on) |
-| `trial`, `condition` | 1–4; IG / OG / T1 / T2 |
+| `trial`, `condition` | 1–2; IG / OG / T1 / T2 |
 | `animal_moon`, `animal_sun`, `good_team`, `good_animal`, `weak_animal` | who claimed what |
 | `team_first`, `good_first` | team shown first; whether that was the good-reason team |
 | `belief_check_good` / `_weak`, `reason_check_good` / `_weak` | correct / after_replay / no (how many tries: `*_n_tries`) |

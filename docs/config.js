@@ -11,12 +11,17 @@ const CFG = {
  // B = the second. group: IG = ingroup gives the good reason, OG = outgroup;
  // no-group: T1 = Team A gives the good reason, T2 = Team B.
  CONDITIONS: {group: {A: 'IG', B: 'OG'}, no_group: {A: 'T1', B: 'T2'}},
- TRIAL_ORDERS: {'A-first': ['A', 'A', 'B', 'B'], 'B-first': ['B', 'B', 'A', 'A']},
+ // Two trials per child: one of each condition.
+ TRIAL_ORDERS: {'A-first': ['A', 'B'], 'B-first': ['B', 'A']},
 
  // Counterbalancing lists 1-64 (app.js, makeDesign): membership x trial
- // order x animal-pair order (row of LATIN) x Team A (no-group) x scale sides.
+ // order x animal-pair order (row of PAIR_ORDERS) x Team A (no-group) x scale sides.
  N_LISTS: 64,
- LATIN: [[0, 1, 3, 2], [1, 2, 0, 3], [2, 3, 1, 0], [3, 0, 2, 1]],
+ // The two animal pairs of a session come from one colour set, so a child
+ // sees only one Moon boy: blue + red (dark-haired boy) or green + yellow
+ // (fair-haired boy). pair_order 1-4 = row of this list.
+ PAIR_ORDERS: [['blue', 'red'], ['red', 'blue'], ['green', 'yellow'], ['yellow', 'green']],
+ COLOUR_SETS: {blue: 'blue_red', red: 'blue_red', green: 'green_yellow', yellow: 'green_yellow'},
 
  BOXES: {blue: ['elephant', 'lion'], red: ['dog', 'cat'], green: ['rhino', 'turtle'],
          yellow: ['cow', 'pig']},
@@ -31,8 +36,6 @@ const CFG = {
  SOLUTION_MAJORITY: 6,                   // solution screen: the child's animal in 6 of 10 boxes
 
  N_STICKERS: 5,
- LIKING: ['really_like', 'kind_of_like', 'kind_of_not_like', 'really_not_like'],
- LIKING_SCORE: {really_like: 4, kind_of_like: 3, kind_of_not_like: 2, really_not_like: 1},
 
  // Confidence scale (as Study 1)
  REALLY: 0.5,
@@ -124,10 +127,8 @@ const CFG = {
    show_teams_say: '[point to the {own} team] "Here are some people who are also on your team, the {own} team."\n[point to the {other} team] "And here are some people who are on the other team, the {other} team."',
    teams_no_group: 'Show the child both teams, then tap Continue.',
    teams_no_group_say: '[point to the Moon team] "Here are some people who play on the Moon team."\n[point to the Sun team] "And here are some people who play on the Sun team."',
-   liking: 'Liking check: ask about each person and tap the child\'s answer under the picture.',
-   liking_say: '[point to {this_sg} from {whose1}] "Do you see {this_sg} from {whose1}? Do you like or not like {him}?" "Okay."\n"And do you really like or kind of like {him}? / And do you really not like or kind of not like {him}?" "Okay."\n[the same for {this_sg} from {whose2}]\n[move the photos out of sight] "Later we\'ll hear from these two teams about the game we will play."',
-   liking_options: {really_like: 'really like', kind_of_like: 'kind of like',
-                    kind_of_not_like: 'kind of not like', really_not_like: 'really not like'},
+   play: 'Play question: ask the question and tap the picture of the person the child chooses (tap the other picture to change it).',
+   play_say: '[point to {this_sg} from {whose1}, then to {this_sg} from {whose2}] "Who would you rather play with: {this_sg} from {whose1} or {this_sg} from {whose2}?" [let the child point]\n[move the photos out of sight] "Later we\'ll hear from these two teams about the game we will play."',
    no_answer: 'No answer',
    sticker_intro: 'Sticker task\n\nLeave one person of each team on the table (same gender as the child: {pl}) and put {n} stickers on the table. On the next screen the child gives them to the two team members; tap the dots under each person to record how many each gets.',
    sticker_intro_say: '"Now I will ask you some questions about the two teams. Let\'s move these people out of the way." [leave one person of each team]\n"Now I have some stickers here, let\'s see how many I have. I have 1, 2, 3, 4, 5 stickers. And now you can tell me how many stickers to give each of these two {pl}."\n[next screen, point to each person]\n"So out of these 5 stickers, how many stickers should I give to {this_sg} from {whose1}?"\n"Okay, and how many stickers should I give to {this_sg} from {whose2}?"\n[move the stickers out of sight]',
@@ -204,10 +205,8 @@ const CFG = {
    show_teams_say: '[wijs naar het {own}-team] "Kijk, dit zijn kinderen die eerder in jouw team hebben gespeeld."\n[wijs naar het {other}-team] "En dit zijn kinderen die in het andere team hebben gespeeld, het {other}-team."',
    teams_no_group: 'Laat het kind beide teams zien en tik dan op Verder.',
    teams_no_group_say: '[wijs naar het Maan-team] "Kijk, dit zijn kinderen die eerder in het Maan-team hebben gespeeld."\n[wijs naar het Zon-team] "En dit zijn kinderen die in het Zon-team hebben gespeeld."',
-   liking: 'Sympathie: vraag naar ieder en tik het antwoord van het kind aan onder het plaatje.',
-   liking_say: '[wijs naar {this_sg} van {whose1}] "Zie je {this_sg} van {whose1}? Vind je {him} aardig of niet aardig?" "Oké."\n"En vind je {him} heel aardig of een beetje aardig? / En vind je {him} helemaal niet aardig of een beetje niet aardig?" "Oké."\n[hetzelfde voor {this_sg} van {whose2}]\n[haal de foto\'s uit het zicht] "Straks horen we van deze twee teams over het spelletje dat we gaan spelen."',
-   liking_options: {really_like: 'heel aardig', kind_of_like: 'een beetje aardig',
-                    kind_of_not_like: 'een beetje niet aardig', really_not_like: 'helemaal niet aardig'},
+   play: 'Speelvraag: stel de vraag en tik op het plaatje van de persoon die het kind kiest (tik op het andere plaatje om het te veranderen).',
+   play_say: '[wijs naar {this_sg} van {whose1}, dan naar {this_sg} van {whose2}] "Met wie zou je liever spelen: met {this_sg} van {whose1} of met {this_sg} van {whose2}?" [laat het kind aanwijzen]\n[haal de foto\'s uit het zicht] "Straks horen we van deze twee teams over het spelletje dat we gaan spelen."',
    no_answer: 'Geen antwoord',
    sticker_intro: 'Stickertaak\n\nLaat van elk team één persoon van hetzelfde geslacht als het kind op tafel liggen ({pl}) en leg {n} stickers op tafel. Op het volgende scherm verdeelt het kind ze over de twee teamleden; tik op de bolletjes onder elke persoon om te noteren hoeveel ieder krijgt.',
    sticker_intro_say: '"Nu ga ik je een paar vragen stellen over de twee teams. Laten we deze mensen even aan de kant zetten." [laat van elk team één persoon liggen]\n"Ik heb hier wat stickers, laten we eens kijken hoeveel ik er heb. Ik heb 1, 2, 3, 4, 5 stickers. Nu mag jij mij vertellen hoeveel stickers ik aan elk van deze twee {pl} moet geven."\n[volgend scherm, wijs naar elke persoon]\n"Hoeveel van deze 5 stickers moet ik geven aan {this_sg} van {whose1}?"\n"Oké, en hoeveel stickers moet ik geven aan {this_sg} van {whose2}?"\n[haal de stickers uit het zicht]',
