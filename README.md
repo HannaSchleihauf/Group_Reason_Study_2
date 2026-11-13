@@ -34,13 +34,16 @@ All commands below are run from the `Study2_Web` folder.
    members.
 4. **4 trials**, one animal pair each:
    - setup (in the first trial, the game introduction and scale practice);
-   - **step 2**: belief video of each team (no reason), each followed by "what
-     does the team think?" (replayed up to twice if wrong); the experimenter puts the
-     toy animals on the logos;
+   - **step 2**: belief video of each team (no reason), both videos first, then
+     the check "what does the team think?" for the first team and then for the
+     second team (the team's logo and photo are shown on top; if wrong, that
+     team's video is replayed, up to twice); the experimenter puts the toy
+     animals on the logos;
    - **step 3**: initial belief (which animal, then how sure);
    - **step 4**: reason video of each team in the same order (good reason = 4
-     boxes, weak = 2 boxes), each followed by "what do they think / how many
-     boxes did they open?" (replayed up to twice if wrong);
+     boxes, weak = 2 boxes), again both videos first, then "what do they think /
+     how many boxes did they open?" for each team in turn (replayed up to twice
+     if wrong);
    - **step 5**: final belief (the marker starts at the initial belief).
 5. **Solution screen** (as in Study 1): the child taps each row of boxes; the
    child's final animal is always in most of them.

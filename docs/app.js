@@ -1090,7 +1090,7 @@ async function playVideo(name) {
 // Check questions after a video, on one screen, one step at a time (as in
 // Study 1): what does the team think and, after a reason video (quality
 // given), how many boxes did they open?
-async function checkScreen(team, t, claimed, {quality = null, step, video, attempt, after = ''}) {
+async function checkScreen(team, t, claimed, {quality = null, step, video, attempt}) {
   clear();
   helpIcon();
   const left = t.animal_left, right = t.animal_right, box = t.box_color;
@@ -1149,7 +1149,7 @@ async function checkScreen(team, t, claimed, {quality = null, step, video, attem
   const ifRight = withReason
     ? fmt(EXP.if_right_reason_say, {whose: who, c, n: CFG.NUMBER_WORDS[lang][nOpen]})
     : fmt(EXP.if_right_belief_say, {whose: who, c});
-  sayText(after ? `${ifRight}\n${after}` : ifRight, 0, withReason ? -0.435 : -0.2,
+  sayText(ifRight, 0, withReason ? -0.435 : -0.2,
           {size: withReason ? 0.018 : 0.024});
 
   const answer = {belief: null, reason: withReason ? null : '', prompted: ''};
@@ -1199,11 +1199,13 @@ async function checkScreen(team, t, claimed, {quality = null, step, video, attem
 }
 
 const ATTEMPT_FIELDS = ['belief', 'belief_correct', 'boxes', 'boxes_correct', 'prompted', 'rt'];
-// One team's video with its check questions, as steps (one screen each): the
-// video, the check screen and, if an answer was wrong, the repeat screen, the
-// video again and the check again (up to MAX_CHECKS). `V()` holds the plays
-// ({attempt: {plays, missing}}) and answers ({attempt: check result}).
-function videoSteps(S, k, prefix, teamOf, {quality = () => null, step, video, after = () => ''}) {
+// One team's video with its check questions, as steps (one screen each).
+// `watch`: the first viewing. `checks`: the check screen and, if an answer was
+// wrong, the repeat screen, the video again and the check again (up to
+// MAX_CHECKS). Both teams' videos are watched before the first check (see
+// pairSteps). `V()` holds the plays ({attempt: {plays, missing}}) and answers
+// ({attempt: check result}).
+function videoSteps(S, k, prefix, teamOf, {quality = () => null, step, video}) {
   const t = () => S.trials[k];
   const V = () => S.tr[k][prefix];
   const claimed = () => t()[`animal_${teamOf()}`];
@@ -1211,20 +1213,23 @@ function videoSteps(S, k, prefix, teamOf, {quality = () => null, step, video, af
                                 : beliefVideo(t().box_color, teamOf(), claimed()));
   const tries = () => Object.keys(V().checks).length;
   const needed = a => a === 1 || (tries() === a - 1 && !V().checks[a - 1].passed);
-  const steps = [];
+  const watch = [async () => {
+    S.tr[k][prefix] = {videos: {}, checks: {}};
+    V().videos[1] = await playVideo(name());
+  }];
+  const checks = [];
   for (let a = 1; a <= CFG.MAX_CHECKS; a++) {
     if (a > 1) {
-      steps.push(() => (needed(a) ? experimenterScreen(EXP.repeat, null, EXP.repeat_say) : NO_SCREEN));
+      checks.push(() => (needed(a) ? experimenterScreen(EXP.repeat, null, EXP.repeat_say) : NO_SCREEN));
+      checks.push(async () => {
+        if (!needed(a)) return NO_SCREEN;
+        V().videos[a] = await playVideo(name());
+      });
     }
-    steps.push(async () => {
-      if (!needed(a)) return NO_SCREEN;
-      if (a === 1) S.tr[k][prefix] = {videos: {}, checks: {}};
-      V().videos[a] = await playVideo(name());
-    });
-    steps.push(async () => {
+    checks.push(async () => {
       if (!needed(a)) return NO_SCREEN;
       V().checks[a] = await checkScreen(teamOf(), t(), claimed(),
-                                        {quality: quality(), step, video, attempt: a, after: after()});
+                                        {quality: quality(), step, video, attempt: a});
     });
   }
   // data columns of this video, once its steps are done
@@ -1244,7 +1249,14 @@ function videoSteps(S, k, prefix, teamOf, {quality = () => null, step, video, af
                          [`${prefix}_check`]: check, [`${prefix}_n_tries`]: n});
     return {cols, check, role, passed: last.passed};
   };
-  return {steps, result};
+  return {watch, checks, result};
+}
+
+// Both teams' videos of one step: video 1, a short screen for the
+// experimenter, video 2, then the check questions of team 1 (replaying its
+// video if wrong), then those of team 2.
+function pairSteps(v1, v2, between) {
+  return [...v1.watch, between, ...v2.watch, ...v1.checks, ...v2.checks];
 }
 
 // Liking check: the experimenter records how much the child likes the team
@@ -1487,7 +1499,7 @@ async function main() {
       CFG.BOX_DISPLAY[box()], fmt(EXP[`${setup}_say`], names())));
     if (firstRound) steps.push(...practiceSteps(S, left, right, names));
 
-    // Step 2: belief videos (no reasons), each followed by its check question
+    // Step 2: belief videos (no reasons) of both teams, then their check questions
     steps.push(() => {
       const remember = group ? fmt(EXP.remember, {own: teamName(S.team_a)}) : '';
       return experimenterScreen(
@@ -1495,10 +1507,12 @@ async function main() {
         null, (firstRound ? `${EXP.train_end_say}\n` : '')
           + fmt(EXP.belief_intro_say, {...names(), remember, whose: whose(first())}));
     });
-    const belief1 = videoSteps(S, k, 'belief_vid1', first, {
-      step: 2, video: 1, after: () => fmt(EXP.next_video_say, {whose: whose(second())})});
+    const belief1 = videoSteps(S, k, 'belief_vid1', first, {step: 2, video: 1});
     const belief2 = videoSteps(S, k, 'belief_vid2', second, {step: 2, video: 2});
-    steps.push(...belief1.steps, ...belief2.steps);
+    const between = () => experimenterScreen(
+      fmt(EXP.next_video, {team: teamName(second()), whose: whoseNote(second())}),
+      null, fmt(EXP.next_video_say, {whose: whose(second())}));
+    steps.push(...pairSteps(belief1, belief2, between));
     steps.push(() => {
       const [named1, named2] = named();
       return experimenterScreen(
@@ -1517,7 +1531,7 @@ async function main() {
                                        follow: CFG.BUBBLE_IN_TEST});
     });
 
-    // Step 4: reason videos in the same team order (good reason: 4 boxes)
+    // Step 4: reason videos in the same team order (good reason: 4 boxes), then the checks
     steps.push(() => experimenterScreen(
       fmt(EXP.reason_intro, {t: k + 1, n: N_TRIALS, team: teamName(first()), whose: whoseNote(first())}),
       null, EXP.reason_intro_say));
@@ -1525,7 +1539,7 @@ async function main() {
                                {quality: () => quality(first()), step: 4, video: 1});
     const reason2 = videoSteps(S, k, 'reason_vid2', second,
                                {quality: () => quality(second()), step: 4, video: 2});
-    steps.push(...reason1.steps, ...reason2.steps);
+    steps.push(...pairSteps(reason1, reason2, between));
     steps.push(() => {
       const [named1, named2] = named();
       const nWord = team => CFG.NUMBER_WORDS[lang][CFG.BOXES_OPENED[quality(team)]];
