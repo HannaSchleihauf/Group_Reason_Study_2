@@ -1255,11 +1255,11 @@ function videoSteps(S, k, prefix, teamOf, {quality = () => null, step, video}) {
   return {watch, checks, result};
 }
 
-// Both teams' videos of one step: video 1, a short screen for the
-// experimenter, video 2, then the check questions of team 1 (replaying its
-// video if wrong), then those of team 2.
+// Both teams' videos of one step, each followed right away by its check
+// questions (replaying that video if wrong): video 1 and its checks, a short
+// screen for the experimenter, then video 2 and its checks.
 function pairSteps(v1, v2, between) {
-  return [...v1.watch, between, ...v2.watch, ...v1.checks, ...v2.checks];
+  return [...v1.watch, ...v1.checks, between, ...v2.watch, ...v2.checks];
 }
 
 // Play question: who would the child rather play with? One member of each
@@ -1271,6 +1271,7 @@ async function playScreen(memberGender, sides, header, say) {
   clear();
   helpIcon();
   expText(header, 0, 0.455, {size: 0.024, width: 2 * HALF_W * 0.85});
+  text(TXT.play, 0, 0.375, {size: 42 * PX, bold: true, width: 2 * HALF_W * 0.9});
   const x = Math.min(0.3, HALF_W * 0.45), photo = Math.min(0.36, HALF_W * 0.56), yPhoto = 0.11;
   let choice = '';
   const frames = {}, hits = {};
@@ -1325,8 +1326,10 @@ async function solutionScreen(rounds) {
   const boxW = rowW / (n + (n - 1) * 0.2);
   const done = button(TXT.continue, 0, -0.4);
   done.style.display = 'none';
+  // rows 0.17 apart, centred around y = 0.015 (with 4 rows: 0.27 ... -0.24)
+  const yTop = 0.015 + (rounds.length - 1) * 0.17 / 2;
   const rows = rounds.map(([box, left, right, animal], i) => {
-    const y = 0.27 - i * 0.17;
+    const y = yTop - i * 0.17;
     const other = animal === left ? right : left;
     const contents = shuffle([...Array(CFG.SOLUTION_MAJORITY).fill(animal),
                               ...Array(n - CFG.SOLUTION_MAJORITY).fill(other)]);
@@ -1616,11 +1619,12 @@ async function main() {
         rating2_rt: round(rating2.rt, 3),
         rating2_first_touch_rt: rt3(rating2.first_touch_rt),
         rating2_n_touches: rating2.n_touches,
-        change_toward_good: pct(toGood * (r2 - r1)),
-        change_toward_team_a: pct(toA * (r2 - r1)),
+        // belief revision: second minus first rating, positive = toward the good
+        // reason's animal (and toward Team A's animal)
+        belief_revision: pct(toGood * (r2 - r1)),
+        belief_revision_toward_team_a: pct(toA * (r2 - r1)),
         // crossed the middle toward the good reason (only if it started on the weak side)
         switch_to_good: side(r1) === 'weak' ? side(r2) === 'good' : '',
-        solution_animal: T().final_animal,
         ...b1.cols, ...b2.cols, ...rs1.cols, ...rs2.cols,
         minutes_since_start: minutes(),
         session_duration_min: '',  // filled in at the end

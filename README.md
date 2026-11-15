@@ -35,16 +35,14 @@ All commands below are run from the `Study2_Web` folder.
    (left to right, random) and taps the picture the child chooses.
 4. **2 trials** (one per condition), one animal pair each:
    - setup (in the first trial, the game introduction and scale practice);
-   - **step 2**: belief video of each team (no reason), both videos first, then
-     the check "what does the team think?" for the first team and then for the
-     second team (the team's logo and photo are shown on top; if wrong, that
-     team's video is replayed, up to twice); the experimenter puts the toy
+   - **step 2**: belief video of each team (no reason), each followed right
+     away by "what does the team think?" (the team's logo and photo are shown
+     on top; replayed up to twice if wrong); the experimenter puts the toy
      animals on the logos;
    - **step 3**: initial belief (which animal, then how sure);
    - **step 4**: reason video of each team in the same order (good reason = 4
-     boxes, weak = 2 boxes), again both videos first, then "what do they think /
-     how many boxes did they open?" for each team in turn (replayed up to twice
-     if wrong);
+     boxes, weak = 2 boxes), each followed right away by "what do they think /
+     how many boxes did they open?" (replayed up to twice if wrong);
    - **step 5**: final belief (the marker starts at the initial belief).
 5. **Solution screen** (as in Study 1): the child taps each row of boxes; the
    child's final animal is always in most of them.
@@ -95,11 +93,12 @@ Randomised within each session (and recorded per trial):
 | `animal_moon`, `animal_sun`, `good_team`, `good_animal`, `weak_animal` | who claimed what |
 | `team_first`, `good_first` | team shown first; whether that was the good-reason team |
 | `belief_check_good` / `_weak`, `reason_check_good` / `_weak` | correct / after_replay / no (how many tries: `*_n_tries`) |
-| `solution_animal` | the animal shown as the majority on the solution screen (the final belief; middle = the first choice) |
 | `belief1_choice`, `good_confirms_initial` | initial animal; yes / no / dont_know (initial in the middle) |
 | `rating1_raw`, `rating2_raw` | scale position, −100 (left) … 100 (right) |
-| `rating*_toward_good`, `change_toward_good` | positive = toward the good-reason team's animal |
-| `rating*_toward_team_a`, `change_toward_team_a` | positive = toward Team A's animal (group: own team) |
+| `rating*_toward_good` | positive = toward the good-reason team's animal |
+| `rating*_toward_team_a` | positive = toward Team A's animal (group: own team) |
+| `belief_revision` | second minus first rating (`rating2_toward_good` − `rating1_toward_good`): positive = moved toward the good reason, negative = toward the weak one (−200 … 200) |
+| `belief_revision_toward_team_a` | the same, positive = toward Team A's animal |
 | `rating1_side`, `rating2_side` | good / weak / middle |
 | `switch_to_good` | crossed the middle toward the good reason (only filled when the initial belief was on the weak side) |
 | `belief_vid1_*`, `belief_vid2_*`, `reason_vid1_*`, `reason_vid2_*` | per video: team, role, file, plays, check result and the answers of each try |
