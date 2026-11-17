@@ -1137,7 +1137,6 @@ async function checkScreen(team, t, claimed, {quality = null, step, video, attem
     option('belief', animal, x, yB, 0.1, 0.09, [image(media.animal(animal), x, yB, 0.14)]));
   const dontKnow = {belief: button(EXP.dont_know, 0, yB, {color: CFG.EXP_BUTTON_COLOR})};
   sections.belief.push(dontKnow.belief);
-  let prompted = {};
   if (withReason) {
     sections.reason.push(line(fmt(EXP.ask, {q: TXT.check_reason_numeric}), 0.0));
     const layer = svgLayer();
@@ -1148,9 +1147,6 @@ async function checkScreen(team, t, claimed, {quality = null, step, video, attem
     });
     dontKnow.reason = button(EXP.dont_know, 0, yR - 0.105, {color: CFG.EXP_BUTTON_COLOR});
     sections.reason.push(dontKnow.reason);
-    prompted = {self: button(EXP.said_self, -0.17, -0.295, {color: CFG.EXP_BUTTON_COLOR}),
-                prompted: button(EXP.said_prompted, 0.17, -0.295, {color: CFG.EXP_BUTTON_COLOR})};
-    sections.end.push(...Object.values(prompted));
   }
   const done = button(TXT.continue, 0, withReason ? -0.385 : -0.42);
   const ifRight = withReason
@@ -1159,7 +1155,7 @@ async function checkScreen(team, t, claimed, {quality = null, step, video, attem
   sayText(ifRight, 0, withReason ? -0.435 : -0.2,
           {size: withReason ? 0.018 : 0.024});
 
-  const answer = {belief: null, reason: withReason ? null : '', prompted: ''};
+  const answer = {belief: null, reason: withReason ? null : ''};
   const now = () => (answer.belief === null ? 'belief' : answer.reason === null ? 'reason' : 'end');
   const questions = withReason ? ['belief', 'reason'] : ['belief'];
   const draw = () => {
@@ -1174,8 +1170,6 @@ async function checkScreen(team, t, claimed, {quality = null, step, video, attem
       });
       setColor(dontKnow[q], answer[q] === 'dont_know' ? CFG.SELECTED_COLOR : CFG.EXP_BUTTON_COLOR);
     });
-    Object.entries(prompted).forEach(([value, b]) =>
-      setColor(b, answer.prompted === value ? CFG.SELECTED_COLOR : CFG.EXP_BUTTON_COLOR));
     setEnabled(done, current === 'end');
   };
   draw();
@@ -1191,21 +1185,16 @@ async function checkScreen(team, t, claimed, {quality = null, step, video, attem
     Object.entries(options[q]).forEach(([value, o]) => onTap(o.hit, () => choose(q, value)));
     onTap(dontKnow[q], () => choose(q, 'dont_know'));
   });
-  Object.entries(prompted).forEach(([value, b]) => onTap(b, () => {
-    if (now() !== 'end') return;
-    answer.prompted = answer.prompted === value ? '' : value;
-    draw();
-  }));
   await new Promise(resolve => onTap(done, resolve));
   const beliefCorrect = answer.belief === claimed;
   const reasonCorrect = !withReason || answer.reason === rightReason;
   return {belief: answer.belief, belief_correct: beliefCorrect,
           boxes: withReason ? answer.reason : '', boxes_correct: withReason ? reasonCorrect : '',
-          prompted: answer.prompted, passed: beliefCorrect && reasonCorrect,
+          passed: beliefCorrect && reasonCorrect,
           rt: round((performance.now() - t0) / 1000, 3)};
 }
 
-const ATTEMPT_FIELDS = ['belief', 'belief_correct', 'boxes', 'boxes_correct', 'prompted', 'rt'];
+const ATTEMPT_FIELDS = ['belief', 'belief_correct', 'boxes', 'boxes_correct', 'rt'];
 // One team's video with its check questions, as steps (one screen each).
 // `watch`: the first viewing. `checks`: the check screen and, if an answer was
 // wrong, the repeat screen, the video again and the check again (up to
