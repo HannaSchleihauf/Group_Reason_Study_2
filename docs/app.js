@@ -1022,8 +1022,11 @@ const PRACTICE_COLUMNS = ['practice_really_left', 'practice_kind_of_left', 'prac
 // Returns {plays, missing}.
 async function playVideo(name) {
   clear();
-  const vidW = Math.min(1.15, 0.92 * 2 * HALF_W), vidH = vidW * 9 / 16, vidY = 0.02;
-  text(TXT.watch, 0, 0.42, {size: 42 * PX, bold: true});
+  // as large as the screen allows: full width (16:9), at the top; the title
+  // and later the buttons go in the strip below
+  const vidH = Math.min(2 * HALF_W * 9 / 16, 0.76), vidW = vidH * 16 / 9, vidY = 0.5 - vidH / 2;
+  const yBelow = -vidH / 2;
+  const title = text(TXT.watch, 0, yBelow, {size: 42 * PX, bold: true});
   const box = add('div', 'video-box');
   Object.assign(box.style, {width: `${U(vidW)}px`, height: `${U(vidH)}px`});
   place(box, 0, vidY);
@@ -1036,9 +1039,8 @@ async function playVideo(name) {
   video.setAttribute('playsinline', '');
   video.style.display = 'none';
   const play = add('div', 'play', box);
-  const yButtons = vidY - vidH / 2 - 66 * PX;
-  const replay = button(TXT.replay, -0.11, yButtons, {color: '#616161'});
-  const cont = button(TXT.continue, 0.11, yButtons);
+  const replay = button(TXT.replay, -0.11, yBelow, {color: '#616161'});
+  const cont = button(TXT.continue, 0.11, yBelow);
   replay.style.display = cont.style.display = 'none';
   let plays = 0, missing = false, playing = false;
 
@@ -1050,6 +1052,7 @@ async function playVideo(name) {
     plays++;
     playing = true;
     play.style.display = 'none';
+    title.style.display = 'none';
     replay.style.display = cont.style.display = 'none';
     poster.style.display = 'none';
     video.style.display = '';
@@ -1062,6 +1065,7 @@ async function playVideo(name) {
     missing = true;
     playing = false;
     box.innerHTML = '';
+    title.style.display = 'none';
     text(`${EXP.video_missing}\n${name}.mp4`, 0, vidY, {size: 0.035, color: 'red'});
     replay.style.display = cont.style.display = '';
   };

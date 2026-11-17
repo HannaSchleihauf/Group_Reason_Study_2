@@ -114,7 +114,7 @@ svg.layer { position: absolute; left: 0; top: 0; width: 1366px; height: 1024px; 
 
 /* video */
 .video-box { position: absolute; transform: translate(-50%, -50%); background: #111111;
-             border-radius: 12px; overflow: hidden; }
+             overflow: hidden; }
 .video-box video, .video-box img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .play { position: absolute; left: 50%; top: 50%; width: 123px; height: 123px; border-radius: 50%;
         transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.55); pointer-events: none; }
